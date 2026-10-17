@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Davomat hisobi</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#1b2333;--mut:#6b7587;--pri:#2563eb;--ok:#16a34a;--bad:#dc2626;--bd:#e3e8f1;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1420;--card:#18202f;--tx:#e8edf7;--mut:#93a0b8;--pri:#5b8cff;--ok:#4ade80;--bad:#f87171;--bd:#2a3550;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1420;--card:#18202f;--tx:#e8edf7;--mut:#93a0b8;--pri:#5b8cff;--ok:#4ade80;--bad:#f87171;--bd:#2a3550;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px;max-width:760px;margin:0 auto}
+h1{font-size:20px;margin:4px 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.stat small{color:var(--mut);display:block;font-size:12px}
+.stat b{font-size:18px}
+.stat em{display:block;font-style:normal;font-size:12px;color:var(--mut);margin-top:2px}
+.stat.big{grid-column:1/-1;background:var(--pri);color:#fff;border:0}
+.stat.big small,.stat.big em{color:#dbe6ff}.stat.big b{font-size:28px}
+h2{font-size:14px;color:var(--mut);font-weight:600;margin:0 0 8px}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font-size:16px;font-family:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+button{font:inherit;border:0;border-radius:10px;padding:11px 14px;cursor:pointer;background:var(--pri);color:#fff;font-weight:600}
+button.g{background:transparent;color:var(--mut);border:1px solid var(--bd);padding:6px 10px;font-weight:500;font-size:13px}
+button.w{width:100%}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:480px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{color:var(--mut);font-weight:500;font-size:12px}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad)}
+.empty{color:var(--mut);text-align:center;padding:18px 0}
+details summary{cursor:pointer;font-weight:600}
+.hint{font-size:12px;color:var(--mut);margin-top:8px}
+#cmp{font-size:14px;margin-bottom:8px;line-height:1.5}
+svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px}
+.lg i{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+#sync{font-size:12px;color:var(--mut);margin:-8px 0 12px}
+#nav{display:none}
+.step{display:grid;grid-template-columns:54px 1fr 54px;gap:6px}
+.step button{padding:0;font-size:26px;height:50px}
+.step input{text-align:center;font-size:22px;height:50px}
+@media all{
+body{padding:12px 12px 84px}
+#nav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+#nav button{background:transparent;color:var(--mut);font-size:12px;padding:6px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+#nav button span{font-size:22px}
+#nav button.on{color:var(--pri);background:var(--bg)}
+.tab{display:none}.tab.on{display:block}.grid.tab.on{display:grid}
+.row{grid-template-columns:1fr}
+#save{height:54px;font-size:17px}
+input,select{height:48px}
+}
+@media (min-width:601px){.row{grid-template-columns:1fr 1fr}#nav{left:50%;right:auto;width:min(760px,100%);transform:translateX(-50%);border:1px solid var(--bd);border-radius:14px 14px 0 0}}
+</style>
+</head>
+<body>
+<h1>📚 Davomat hisobi</h1>
+<div id="sync">Yuklanmoqda…</div>
+
+<div class="card">
+  <label for="month">Oy</label>
+  <input type="month" id="month">
+</div>
+
+<div class="grid tab" id="grid" data-t="kh">
+  <div class="stat big"><small>4 ta guruh — shu oydagi umumiy pul</small><b id="sTotal">0</b> <span>soʻm</span><em id="sMeta"></em></div>
+  <div class="stat"><small>SPSH 10:00–12:00</small><b id="g_A">0</b><em id="n_A"></em></div>
+  <div class="stat"><small>SPSH 13:30–15:00</small><b id="g_B">0</b><em id="n_B"></em></div>
+  <div class="stat"><small>DCHJ 13:30–15:00</small><b id="g_C">0</b><em id="n_C"></em></div>
+  <div class="stat"><small>DCHJ 15:00–16:30</small><b id="g_D">0</b><em id="n_D"></em></div>
+  <div class="stat"><small>1 davomat narxi</small><b id="sPrice">0</b></div>
+  <div class="stat"><small>Darslar soni</small><b id="sLessons">0</b></div>
+</div>
+
+<div class="card tab" data-t="h">
+  <h2>📈 Oʻtgan oy bilan solishtirish (kunma-kun, yigʻilib boruvchi)</h2>
+  <div id="cmp"></div>
+  <div id="chart"></div>
+  <div class="lg"><span><i style="background:var(--pri)"></i><span id="lgCur"></span></span><span><i style="background:var(--mut)"></i><span id="lgPrev"></span></span></div>
+</div>
+
+<div class="card tab" id="formCard" data-t="k">
+  <b id="formTitle">Yangi dars qoʻshish</b>
+  <div class="row" style="margin-top:10px">
+    <div><label for="date">Sana</label><input type="date" id="date"></div>
+    <div><label for="grp">Guruh / dars vaqti</label>
+      <select id="grp">
+        <option value="A">SPSH · 10:00–12:00</option>
+        <option value="B">SPSH · 13:30–15:00</option>
+        <option value="C">DCHJ · 13:30–15:00</option>
+        <option value="D">DCHJ · 15:00–16:30</option>
+      </select></div>
+  </div>
+  <div class="row">
+    <div><label for="in">Keldi (nechta)</label><div class="step"><button type="button" onclick="bump('in',-1)">−</button><input type="number" id="in" min="0" inputmode="numeric" placeholder="0"><button type="button" onclick="bump('in',1)">+</button></div></div>
+    <div><label for="out">Kelmadi (nechta)</label><div class="step"><button type="button" onclick="bump('out',-1)">−</button><input type="number" id="out" min="0" inputmode="numeric" placeholder="0"><button type="button" onclick="bump('out',1)">+</button></div></div>
+  </div>
+  <button class="w" id="save">Saqlash</button>
+  <button class="g w" id="cancel" style="display:none;margin-top:8px">Bekor qilish</button>
+  <div class="hint">SPSH = Seshanba, Payshanba, Shanba · DCHJ = Dushanba, Chorshanba, Juma</div>
+</div>
+
+<div class="card tab" data-t="r">
+  <b>Darslar roʻyxati</b>
+  <div class="tw"><table>
+    <thead><tr><th>Sana</th><th>Guruh</th><th>Keldi</th><th>Kelmadi</th><th>Summa</th><th></th></tr></thead>
+    <tbody id="list"></tbody>
+  </table></div>
+</div>
+
+<div class="card tab" data-t="r">
+  <details>
+    <summary>⚙️ Sozlamalar</summary>
+    <div class="row" style="margin-top:10px">
+      <div><label for="cTotal">Oylik toʻliq summa (soʻm)</label><input type="number" id="cTotal"></div>
+      <div></div>
+    </div>
+    <div class="row">
+      <div><label for="c30">31 kundan kam oy — boʻluvchi</label><input type="number" step="0.5" id="c30"></div>
+      <div><label for="c31">31 kunlik oy — boʻluvchi</label><input type="number" step="0.5" id="c31"></div>
+    </div>
+    <div id="gEd"></div>
+    <button class="w" id="saveCfg">Sozlamani saqlash</button>
+    <div class="hint">1 davomat narxi = oylik summa ÷ boʻluvchi (100 000 ÷ 13 = 7 692; 31 kunlik oyda ÷ 13,5 = 7 407 soʻm).</div>
+  </details>
+</div>
+<div class="hint" style="text-align:center">Maʼlumotlar shu qurilma brauzerida saqlanadi.</div>
+
+<nav id="nav"><button data-t="k" onclick="tab('k')"><span>➕</span>Kiritish</button><button data-t="h" onclick="tab('h')"><span>📊</span>Hisob</button><button data-t="r" onclick="tab('r')"><span>📋</span>Roʻyxat</button></nav>
+<script>
+const $=id=>document.getElementById(id);
+function tab(t){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t.includes(t)));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t))}
+function bump(id,d){const e=$(id);e.value=Math.max(0,(parseInt(e.value)||0)+d)}
+let G;const DN=['Yak','Dush','Sesh','Chor','Pay','Jum','Shan'];const dayNames=d=>d.map(x=>DN[x]).join(', ');const DG={A:{n:'SPSH 10:00–12:00',d:[2,4,6]},B:{n:'SPSH 13:30–15:00',d:[2,4,6]},C:{n:'DCHJ 13:30–15:00',d:[1,3,5]},D:{n:'DCHJ 15:00–16:30',d:[1,3,5]}};
+const MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+let st={lessons:[],cfg:{total:100000,d30:13,d31:13.5}};
+let editId=null;
+try{const r=localStorage.getItem('davomat-v1');if(r){const p=JSON.parse(r);if(p&&p.lessons)st={lessons:p.lessons,cfg:Object.assign(st.cfg,p.cfg||{})}}}catch(e){}
+let DB=null;
+function persist(){try{localStorage.setItem('davomat-v1',JSON.stringify(st))}catch(e){}}
+const setSync=t=>{$('sync').textContent=t};
+function dbSave(r){if(DB)DB.collection('lessons').doc(String(r.id)).set(r).catch(()=>setSync('⚠️ Bulutga saqlab boʻlmadi'))}
+function dbDel(id){if(DB)DB.collection('lessons').doc(String(id)).delete().catch(()=>setSync('⚠️ Oʻchirib boʻlmadi'))}
+function dbCfg(){if(DB)DB.doc('cfg/main').set(st.cfg).catch(()=>{})}
+function applyG(){G={};['A','B','C','D'].forEach(k=>{const c=(st.cfg.groups||{})[k];G[k]=c&&c.n?{n:c.n,d:c.d||[]}:DG[k]})}
+function fillGrp(){const s=$('grp'),v=s.value;s.innerHTML='';Object.keys(G).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=G[k].n;s.appendChild(o)});if(v&&G[v])s.value=v;const h=document.querySelector('#formCard .hint');if(h)h.textContent='Guruh nomi va kunlarini ⚙️ Sozlamalar boʻlimida oʻzgartirsangiz boʻladi.'}
+function gEdit(){const box=$('gEd');box.innerHTML='<h2 style="margin-top:8px">Oʻquv guruhlari (nomi va dars kunlari)</h2>';
+['A','B','C','D'].forEach(k=>{const w=document.createElement('div');w.style.marginBottom='12px';
+const i=document.createElement('input');i.id='gn_'+k;i.value=G[k].n;i.placeholder='Masalan: DCHJ 13:30–15:00';w.appendChild(i);
+const r=document.createElement('div');r.style.cssText='display:flex;gap:10px;margin-top:6px;flex-wrap:wrap';
+[1,2,3,4,5,6,0].forEach(d=>{const l=document.createElement('label');l.style.cssText='display:flex;align-items:center;gap:4px;margin:0;font-size:13px;color:var(--tx)';
+const c=document.createElement('input');c.type='checkbox';c.style.cssText='width:20px;height:20px;padding:0';c.dataset.k=k;c.value=d;c.checked=G[k].d.includes(d);
+l.append(c,DN[d]);r.appendChild(l)});w.appendChild(r);box.appendChild(w)})}
+const cfgFill=()=>{$('cTotal').value=st.cfg.total;$('c30').value=st.cfg.d30;$('c31').value=st.cfg.d31;applyG();fillGrp();gEdit()};
+const fmt=n=>Math.round(n).toLocaleString('ru-RU');
+const short=n=>n>=1e6?(n/1e6).toFixed(1).replace('.',',')+' mln':Math.round(n/1000)+' k';
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const dim=ym=>{const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate()};
+const prevYm=ym=>{let[y,m]=ym.split('-').map(Number);m--;if(m<1){m=12;y--}return y+'-'+pad(m)};
+const monName=ym=>MON[+ym.split('-')[1]-1];
+function priceFor(ym){return st.cfg.total/(dim(ym)===31?st.cfg.d31:st.cfg.d30)}
+function cum(ym){ // yigʻilib boruvchi daromad, kunlar boʻyicha
+  const p=priceFor(ym),n=dim(ym),a=Array(n+1).fill(0);
+  st.lessons.forEach(l=>{if(l.date.slice(0,7)===ym)a[+l.date.slice(8,10)]+=l.in*p});
+  for(let i=1;i<=n;i++)a[i]+=a[i-1];
+  return a;
+}
+function chart(ym){
+  const py=prevYm(ym),cur=cum(ym),prv=cum(py);
+  const isNow=ym===today().slice(0,7),lastCur=isNow?+today().slice(8,10):dim(ym);
+  const days=Math.max(dim(ym),dim(py));
+  const W=600,H=230,L=48,R=10,T=12,B=26;
+  const maxY=Math.max(cur[lastCur],prv[dim(py)],1);
+  const X=d=>L+(d-1)/(days-1)*(W-L-R),Y=v=>T+(1-v/maxY)*(H-T-B);
+  let s='<svg viewBox="0 0 '+W+' '+H+'">';
+  for(let i=0;i<=4;i++){const v=maxY*i/4,y=Y(v);
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="var(--bd)"/><text x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="var(--mut)">'+short(v)+'</text>'}
+  [1,5,10,15,20,25,days].forEach(d=>{s+='<text x="'+X(d)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--mut)">'+d+'</text>'});
+  const path=(a,last)=>{let p='';for(let d=1;d<=last;d++)p+=(d==1?'M':'L')+X(d).toFixed(1)+' '+Y(a[d]).toFixed(1)+' ';return p};
+  s+='<path d="'+path(prv,dim(py))+'" fill="none" stroke="var(--mut)" stroke-width="2" stroke-dasharray="5 4"/>';
+  s+='<path d="'+path(cur,lastCur)+'" fill="none" stroke="var(--pri)" stroke-width="3" stroke-linejoin="round"/>';
+  s+='<circle cx="'+X(lastCur)+'" cy="'+Y(cur[lastCur])+'" r="4.5" fill="var(--pri)"/></svg>';
+  $('chart').innerHTML=s;
+  $('lgCur').textContent=monName(ym);$('lgPrev').textContent=monName(py)+' (oʻtgan oy)';
+  const pd=Math.min(lastCur,dim(py)),a=cur[lastCur],b=prv[pd],diff=a-b;
+  const sameDay=isNow?lastCur+'-kunigacha':'oy oxirigacha';
+  let t='<b>'+monName(ym)+'</b> ('+sameDay+'): '+fmt(a)+' soʻm · <b>'+monName(py)+'</b> (shu kunigacha): '+fmt(b)+' soʻm.<br>';
+  if(b===0&&a===0)t+='Hali maʼlumot yoʻq.';
+  else if(diff>0)t+='<span class="ok">▲ Koʻpayyapti: +'+fmt(diff)+' soʻm'+(b>0?' (+'+Math.round(diff/b*100)+'%)':'')+'</span>';
+  else if(diff<0)t+='<span class="bad">▼ Kamayyapti: '+fmt(diff)+' soʻm ('+Math.round(diff/b*100)+'%)</span>';
+  else t+='Teng.';
+  $('cmp').innerHTML=t;
+}
+function render(){
+  const ym=$('month').value||today().slice(0,7);
+  const price=priceFor(ym);
+  const rows=st.lessons.filter(l=>l.date.slice(0,7)===ym).sort((a,b)=>a.date.localeCompare(b.date)||(a.g||'').localeCompare(b.g||''));
+  let tin=0,tout=0;const gi={A:0,B:0,C:0,D:0};
+  const tb=$('list');tb.innerHTML='';
+  if(!rows.length)tb.innerHTML='<tr><td colspan="6" class="empty">Bu oyda hali dars kiritilmagan</td></tr>';
+  rows.forEach(l=>{
+    tin+=l.in;tout+=l.out;if(gi[l.g]!==undefined)gi[l.g]+=l.in;
+    const tr=document.createElement('tr'),d=l.date.split('-');
+    [d[2]+'.'+d[1]+'.'+d[0],l.g&&G[l.g]?G[l.g].n:(l.time||'—'),l.in,l.out,fmt(l.in*price)].forEach((v,i)=>{
+      const td=document.createElement('td');td.textContent=v;
+      if(i===2)td.className='ok';if(i===3)td.className='bad';tr.appendChild(td)});
+    const td=document.createElement('td');
+    const e=document.createElement('button');e.className='g';e.textContent='✏️';e.onclick=()=>edit(l.id);
+    const x=document.createElement('button');x.className='g';x.textContent='🗑';x.style.marginLeft='4px';x.onclick=()=>del(l.id);
+    td.append(e,x);tr.appendChild(td);tb.appendChild(tr);
+  });
+  ['A','B','C','D'].forEach(k=>{$('g_'+k).previousElementSibling.textContent=G[k].n;$('g_'+k).textContent=fmt(gi[k]*price)+' soʻm';$('n_'+k).textContent=gi[k]+' ta davomat'});
+  $('sTotal').textContent=fmt(tin*price);
+  $('sMeta').textContent=monName(ym)+' · jami '+tin+' ta davomat, '+tout+' ta kelmadi';
+  $('sPrice').textContent=fmt(price)+' soʻm';
+  $('sLessons').textContent=rows.length;
+  chart(ym);
+}
+function reset(){editId=null;$('in').value='';$('out').value='';$('date').value=today();$('formTitle').textContent='Yangi dars qoʻshish';$('cancel').style.display='none';$('save').textContent='Saqlash'}
+function edit(id){const l=st.lessons.find(x=>x.id===id);if(!l)return;editId=id;
+  $('date').value=l.date;if(l.g)$('grp').value=l.g;$('in').value=l.in;$('out').value=l.out;
+  tab('k');$('formTitle').textContent='Darsni tahrirlash';$('cancel').style.display='block';$('save').textContent='Yangilash';scrollTo({top:document.body.scrollHeight*0.3,behavior:'smooth'})}
+function del(id){if(!confirm('Bu darsni oʻchirasizmi?'))return;st.lessons=st.lessons.filter(x=>x.id!==id);persist();dbDel(id);render()}
+$('save').onclick=()=>{
+  const date=$('date').value;if(!date){alert('Sanani kiriting');return}
+  const g=$('grp').value,[y,m,d]=date.split('-').map(Number),wd=new Date(y,m-1,d).getDay();
+  if(!G[g].d.includes(wd)&&!confirm('Tanlangan sana bu guruh kunlariga ('+dayNames(G[g].d)+') mos kelmaydi. Baribir saqlansinmi?'))return;
+  const rec={id:editId||Date.now(),date,g,in:Math.max(0,parseInt($('in').value)||0),out:Math.max(0,parseInt($('out').value)||0)};
+  if(editId)st.lessons=st.lessons.map(x=>x.id===editId?rec:x);else st.lessons.push(rec);
+  persist();dbSave(rec);$('month').value=date.slice(0,7);reset();render();$('save').textContent='✓ Saqlandi';setTimeout(()=>{$('save').textContent='Saqlash'},1200);
+};
+$('cancel').onclick=reset;
+$('month').onchange=render;
+$('saveCfg').onclick=()=>{
+  const t=parseFloat($('cTotal').value),a=parseFloat($('c30').value),b=parseFloat($('c31').value);
+  if(!(t>0&&a>0&&b>0)){alert('Qiymatlar 0 dan katta boʻlishi kerak');return}
+  const gs={};['A','B','C','D'].forEach(k=>{const n=$('gn_'+k).value.trim();const d=[...document.querySelectorAll('#gEd input[type=checkbox][data-k="'+k+'"]:checked')].map(c=>+c.value);gs[k]={n:n||DG[k].n,d}});
+  st.cfg={total:t,d30:a,d31:b,groups:gs};persist();dbCfg();applyG();fillGrp();render();alert('Saqlandi');
+};
+$('grid').after($('formCard'));cfgFill();
+$('month').value=today().slice(0,7);reset();render();tab('k');
+setSync('📴 Oflayn: maʼlumot faqat shu qurilmada');
+(async()=>{try{
+  if(!window.claude||!claude.use)return;
+  const db=await claude.use('db');if(!db)return;
+  DB=db;let first=true;
+  const off=()=>setSync('📴 Oflayn: maʼlumot faqat shu qurilmada');
+  db.collection('lessons').onSnapshot(s=>{
+    if(s.empty&&s.metadata.fromCache)return;
+    let mig=false;try{mig=localStorage.getItem('davomat-mig')==='1'}catch(e){}
+    if(first&&s.empty&&!mig&&st.lessons.length){st.lessons.forEach(dbSave);try{localStorage.setItem('davomat-mig','1')}catch(e){}first=false;setSync('☁️ Sinxronlanmoqda…');return}
+    first=false;try{localStorage.setItem('davomat-mig','1')}catch(e){}
+    st.lessons=s.docs.map(d=>d.data());persist();render();setSync('☁️ Sinxronlangan — telefon va sayt bir xil');
+  },off);
+  db.doc('cfg/main').onSnapshot(d=>{if(d.exists){st.cfg=Object.assign(st.cfg,d.data());persist();cfgFill();render()}else dbCfg()},off);
+}catch(e){}})();
+</script>
+</body>
+</html>
