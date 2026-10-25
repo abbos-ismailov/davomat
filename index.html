@@ -108,6 +108,7 @@ input,select{height:48px}
 
 <div class="card tab" data-t="r">
   <b>Darslar roʻyxati</b>
+  <div style="margin:10px 0"><button class="w" type="button" onclick="exportXlsx()">📥 Excel yuklab olish (shu oy)</button></div>
   <div class="tw"><table>
     <thead><tr><th>Sana</th><th>Guruh</th><th>Keldi</th><th>Kelmadi</th><th>Summa</th><th></th></tr></thead>
     <tbody id="list"></tbody>
@@ -127,11 +128,23 @@ input,select{height:48px}
     </div>
     <div id="gEd"></div>
     <button class="w" id="saveCfg">Sozlamani saqlash</button>
+    <button class="g w" type="button" style="margin-top:14px" onclick="try{firebase.auth().signOut().then(()=>location.reload())}catch(e){}">🚪 Akkauntdan chiqish</button>
+    
     <div class="hint">1 davomat narxi = oylik summa ÷ boʻluvchi (100 000 ÷ 13 = 7 692; 31 kunlik oyda ÷ 13,5 = 7 407 soʻm).</div>
   </details>
 </div>
 <div class="hint" style="text-align:center">Maʼlumotlar shu qurilma brauzerida saqlanadi.</div>
 
+<div id="login" style="display:none;position:fixed;inset:0;z-index:50;background:var(--bg);align-items:center;justify-content:center;padding:20px;overflow-y:auto"><div class="card" style="width:100%;max-width:360px;margin:0"><b id="lt" style="font-size:18px">🔐 Kirish</b><div class="hint" style="margin-bottom:12px">Maʼlumotlaringiz bulutda saqlanadi. Telefon va kompyuterda bir xil akkaunt bilan kiring.</div>
+<button class="w" type="button" onclick="gAuth()" style="background:#fff;color:#1b2333;border:1px solid var(--bd)"><b style="color:#4285f4">G</b> Google bilan kirish</button>
+<div class="hint" style="text-align:center;margin:12px 0">yoki email bilan</div>
+<label for="lem">Email</label><input id="lem" type="email" autocomplete="username">
+<label for="lpw" style="margin-top:10px">Parol</label><input id="lpw" type="password" autocomplete="current-password">
+<div id="lp2w" style="display:none"><label for="lpw2" style="margin-top:10px">Parolni takrorlang</label><input id="lpw2" type="password" autocomplete="new-password"></div>
+<div id="lerr" class="bad" style="font-size:13px;margin:8px 0;min-height:16px"></div>
+<button id="lgo" class="w" type="button" onclick="doAuth()">Kirish</button>
+<button id="lsw" class="g w" type="button" style="margin-top:8px" onclick="swMode()">Akkaunt yaratish</button>
+<button class="g w" type="button" style="margin-top:8px;border:0" onclick="resetPw()">Parolni unutdim</button></div></div>
 <nav id="nav"><button data-t="k" onclick="tab('k')"><span>➕</span>Kiritish</button><button data-t="h" onclick="tab('h')"><span>📊</span>Hisob</button><button data-t="r" onclick="tab('r')"><span>📋</span>Roʻyxat</button></nav>
 <script>
 const $=id=>document.getElementById(id);
@@ -148,11 +161,11 @@ const setSync=t=>{$('sync').textContent=t};
 function dbSave(r){if(DB)DB.collection('lessons').doc(String(r.id)).set(r).catch(()=>setSync('⚠️ Bulutga saqlab boʻlmadi'))}
 function dbDel(id){if(DB)DB.collection('lessons').doc(String(id)).delete().catch(()=>setSync('⚠️ Oʻchirib boʻlmadi'))}
 function dbCfg(){if(DB)DB.doc('cfg/main').set(st.cfg).catch(()=>{})}
-function applyG(){G={};['A','B','C','D'].forEach(k=>{const c=(st.cfg.groups||{})[k];G[k]=c&&c.n?{n:c.n,d:c.d||[]}:DG[k]})}
-function fillGrp(){const s=$('grp'),v=s.value;s.innerHTML='';Object.keys(G).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=G[k].n;s.appendChild(o)});if(v&&G[v])s.value=v;const h=document.querySelector('#formCard .hint');if(h)h.textContent='Guruh nomi va kunlarini ⚙️ Sozlamalar boʻlimida oʻzgartirsangiz boʻladi.'}
+function applyG(){G={};['A','B','C','D'].forEach(k=>{const c=(st.cfg.groups||{})[k];const o=c&&c.n?c:DG[k];let s=o.s,e=o.e;if(!s||!e){const q=/(\d{1,2}):(\d{2})\D+(\d{1,2}):(\d{2})/.exec(o.n);if(q){s=pad(q[1])+':'+q[2];e=pad(q[3])+':'+q[4]}}G[k]={n:o.n,d:o.d||[],s:s||'',e:e||''}})}
+function fillGrp(){const s=$('grp'),v=s.value;s.innerHTML='';Object.keys(G).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=G[k].n;s.appendChild(o)});if(v&&G[v])s.value=v;if(!$('grpHint')){const h2=document.createElement('div');h2.className='hint';h2.id='grpHint';$('grp').parentNode.appendChild(h2)}const h=document.querySelector('#formCard .hint');if(h)h.textContent='Guruh nomi va kunlarini ⚙️ Sozlamalar boʻlimida oʻzgartirsangiz boʻladi.'}
 function gEdit(){const box=$('gEd');box.innerHTML='<h2 style="margin-top:8px">Oʻquv guruhlari (nomi va dars kunlari)</h2>';
 ['A','B','C','D'].forEach(k=>{const w=document.createElement('div');w.style.marginBottom='12px';
-const i=document.createElement('input');i.id='gn_'+k;i.value=G[k].n;i.placeholder='Masalan: DCHJ 13:30–15:00';w.appendChild(i);
+const i=document.createElement('input');i.id='gn_'+k;i.value=G[k].n;i.placeholder='Masalan: DCHJ 13:30–15:00';w.appendChild(i);const tr=document.createElement('div');tr.style.cssText='display:flex;gap:8px;align-items:center;margin-top:6px;font-size:13px';const t1=document.createElement('input');t1.type='time';t1.id='gs_'+k;t1.value=G[k].s;t1.style.cssText='width:auto;flex:1';const t2=document.createElement('input');t2.type='time';t2.id='ge_'+k;t2.value=G[k].e;t2.style.cssText='width:auto;flex:1';tr.append('Boshlanish',t1,'Tugash',t2);w.appendChild(tr);
 const r=document.createElement('div');r.style.cssText='display:flex;gap:10px;margin-top:6px;flex-wrap:wrap';
 [1,2,3,4,5,6,0].forEach(d=>{const l=document.createElement('label');l.style.cssText='display:flex;align-items:center;gap:4px;margin:0;font-size:13px;color:var(--tx)';
 const c=document.createElement('input');c.type='checkbox';c.style.cssText='width:20px;height:20px;padding:0';c.dataset.k=k;c.value=d;c.checked=G[k].d.includes(d);
@@ -201,7 +214,7 @@ function chart(ym){
 function render(){
   const ym=$('month').value||today().slice(0,7);
   const price=priceFor(ym);
-  const rows=st.lessons.filter(l=>l.date.slice(0,7)===ym).sort((a,b)=>a.date.localeCompare(b.date)||(a.g||'').localeCompare(b.g||''));
+  const rows=st.lessons.filter(l=>l.date.slice(0,7)===ym).sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
   let tin=0,tout=0;const gi={A:0,B:0,C:0,D:0};
   const tb=$('list');tb.innerHTML='';
   if(!rows.length)tb.innerHTML='<tr><td colspan="6" class="empty">Bu oyda hali dars kiritilmagan</td></tr>';
@@ -223,41 +236,80 @@ function render(){
   $('sLessons').textContent=rows.length;
   chart(ym);
 }
-function reset(){editId=null;$('in').value='';$('out').value='';$('date').value=today();$('formTitle').textContent='Yangi dars qoʻshish';$('cancel').style.display='none';$('save').textContent='Saqlash'}
+function autoGrp(){const dv=$('date').value||today(),[y,m,d]=dv.split('-').map(Number),wd=new Date(y,m-1,d).getDay(),isT=dv===today(),now=new Date(),nm=now.getHours()*60+now.getMinutes();
+const mn=t=>{const q=/^(\d{1,2}):(\d{2})$/.exec(t||'');return q?+q[1]*60+ +q[2]:null};
+let best=null,bs=1e9;
+Object.keys(G).filter(k=>G[k].d.includes(wd)).forEach(k=>{const s=mn(G[k].s),e=mn(G[k].e);let sc;if(s===null||e===null)sc=5000;else if(!isT)sc=s;else if(nm>=s-20&&nm<=e+20)sc=0;else sc=Math.min(Math.abs(nm-s),Math.abs(nm-e))+1;if(sc<bs){bs=sc;best=k}});
+const h=$('grpHint');if(best){$('grp').value=best;if(h)h.textContent='✅ '+(isT?'Hozirgi vaqt ('+pad(now.getHours())+':'+pad(now.getMinutes())+') boʻyicha':'Kun boʻyicha')+' tanlandi: '+G[best].n}else if(h)h.textContent='Bu kunga mos guruh topilmadi — qoʻlda tanlang'}
+function exportRows(ym){const p=priceFor(ym);const rows=st.lessons.filter(l=>l.date.slice(0,7)===ym).sort((a,b)=>a.date.localeCompare(b.date)||(a.id-b.id));
+const body=rows.map(l=>{const[y,m,d]=l.date.split('-').map(Number);return[d+'.'+pad(m)+'.'+y,DN[new Date(y,m-1,d).getDay()],l.g&&G[l.g]?G[l.g].n:'',l.g&&G[l.g]&&G[l.g].s?G[l.g].s+'–'+G[l.g].e:'',l.in,l.out,Math.round(p),Math.round(l.in*p)]});
+const ti=rows.reduce((s,l)=>s+l.in,0),to=rows.reduce((s,l)=>s+l.out,0);
+body.push([],['JAMI','','','',ti,to,'',Math.round(ti*p)],[],['Guruhlar boʻyicha']);
+['A','B','C','D'].forEach(k=>{const rk=rows.filter(l=>l.g===k),n=rk.reduce((s,l)=>s+l.in,0),o=rk.reduce((s,l)=>s+l.out,0);body.push([G[k].n,'','','',n,o,'',Math.round(n*p)])});
+return[['Sana','Kun','Guruh','Vaqt','Keldi','Kelmadi','1 davomat narxi','Summa'],...body]}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}
+function loadXlsx(){return new Promise((res,rej)=>{if(window.XLSX)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+async function exportXlsx(){const ym=$('month').value,aoa=exportRows(ym);
+try{await loadXlsx();const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:12},{wch:7},{wch:24},{wch:13},{wch:8},{wch:9},{wch:16},{wch:12}];XLSX.utils.book_append_sheet(wb,ws,monName(ym));dl(new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/octet-stream'}),'davomat-'+ym+'.xlsx')}
+catch(e){const Q=String.fromCharCode(34);const csv='\ufeff'+aoa.map(r=>r.map(c=>Q+String(c==null?'':c).split(Q).join(Q+Q)+Q).join(';')).join('\r\n');dl(new Blob([csv],{type:'text/csv;charset=utf-8'}),'davomat-'+ym+'.csv');alert('Excel kutubxonasi yuklanmadi, CSV fayl yuklandi (Excelda ochiladi).')}}
+function reset(){editId=null;setTimeout(autoGrp,0);$('in').value='';$('out').value='';$('date').value=today();$('formTitle').textContent='Yangi dars qoʻshish';$('cancel').style.display='none';$('save').textContent='Saqlash'}
 function edit(id){const l=st.lessons.find(x=>x.id===id);if(!l)return;editId=id;
   $('date').value=l.date;if(l.g)$('grp').value=l.g;$('in').value=l.in;$('out').value=l.out;
   tab('k');$('formTitle').textContent='Darsni tahrirlash';$('cancel').style.display='block';$('save').textContent='Yangilash';scrollTo({top:document.body.scrollHeight*0.3,behavior:'smooth'})}
-function del(id){if(!confirm('Bu darsni oʻchirasizmi?'))return;st.lessons=st.lessons.filter(x=>x.id!==id);persist();dbDel(id);render()}
+function del(id){if(!confirm('Bu darsni oʻchirasizmi?'))return;const dl0=st.lessons.find(x=>x.id===id);st.lessons=st.lessons.filter(x=>x.id!==id);persist();dbDel(id);render();}
 $('save').onclick=()=>{
   const date=$('date').value;if(!date){alert('Sanani kiriting');return}
   const g=$('grp').value,[y,m,d]=date.split('-').map(Number),wd=new Date(y,m-1,d).getDay();
   if(!G[g].d.includes(wd)&&!confirm('Tanlangan sana bu guruh kunlariga ('+dayNames(G[g].d)+') mos kelmaydi. Baribir saqlansinmi?'))return;
   const rec={id:editId||Date.now(),date,g,in:Math.max(0,parseInt($('in').value)||0),out:Math.max(0,parseInt($('out').value)||0)};
-  if(editId)st.lessons=st.lessons.map(x=>x.id===editId?rec:x);else st.lessons.push(rec);
+  const old0=editId&&st.lessons.find(x=>x.id===editId);if(editId)st.lessons=st.lessons.map(x=>x.id===editId?rec:x);else st.lessons.push(rec);
   persist();dbSave(rec);$('month').value=date.slice(0,7);reset();render();$('save').textContent='✓ Saqlandi';setTimeout(()=>{$('save').textContent='Saqlash'},1200);
 };
 $('cancel').onclick=reset;
-$('month').onchange=render;
+$('month').onchange=render;$('date').onchange=()=>{if(!editId)autoGrp()};document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!editId){if(!$('in').value&&!$('out').value)$('date').value=today();autoGrp()}});
 $('saveCfg').onclick=()=>{
   const t=parseFloat($('cTotal').value),a=parseFloat($('c30').value),b=parseFloat($('c31').value);
   if(!(t>0&&a>0&&b>0)){alert('Qiymatlar 0 dan katta boʻlishi kerak');return}
-  const gs={};['A','B','C','D'].forEach(k=>{const n=$('gn_'+k).value.trim();const d=[...document.querySelectorAll('#gEd input[type=checkbox][data-k="'+k+'"]:checked')].map(c=>+c.value);gs[k]={n:n||DG[k].n,d}});
+  const gs={};['A','B','C','D'].forEach(k=>{const n=$('gn_'+k).value.trim();const d=[...document.querySelectorAll('#gEd input[type=checkbox][data-k="'+k+'"]:checked')].map(c=>+c.value);gs[k]={n:n||DG[k].n,d,s:$('gs_'+k).value,e:$('ge_'+k).value}});
   st.cfg={total:t,d30:a,d31:b,groups:gs};persist();dbCfg();applyG();fillGrp();render();alert('Saqlandi');
 };
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 $('grid').after($('formCard'));cfgFill();
 $('month').value=today().slice(0,7);reset();render();tab('k');
 setSync('📴 Oflayn: maʼlumot faqat shu qurilmada');
+const FBCFG={apiKey:"AIzaSyDoa3c2FzXrWSrWduUc9evbGs5OC2FEPlc",authDomain:"attendace-522cf.firebaseapp.com",projectId:"attendace-522cf",storageBucket:"attendace-522cf.firebasestorage.app",messagingSenderId:"131447015623",appId:"1:131447015623:web:17cf16f560b7b83a26d6e2"};
+const ldJs=s=>new Promise((res,rej)=>{const e=document.createElement('script');e.src=s;e.onload=res;e.onerror=rej;document.head.appendChild(e)});
+async function getFbDb(){
+  try{for(const m of ['app','auth','firestore'])await ldJs('https://www.gstatic.com/firebasejs/10.12.2/firebase-'+m+'-compat.js')}catch(e){return null}
+  firebase.initializeApp(FBCFG);const fs=firebase.firestore();
+  try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
+  return new Promise(res=>{firebase.auth().onAuthStateChanged(u=>{
+    if(u){$('login').style.display='none';res({collection:n=>fs.collection('users/'+u.uid+'/'+n),doc:p=>fs.doc('users/'+u.uid+'/'+p),uid:u.uid,email:u.email})}
+    else $('login').style.display='flex'})})}
+let signUp=false;
+const AM={'auth/invalid-credential':'Email yoki parol noto\u02bbg\u02bbri','auth/wrong-password':'Parol noto\u02bbg\u02bbri','auth/user-not-found':'Bunday akkaunt yo\u02bbq — Akkaunt yaratish ni bosing','auth/invalid-email':'Email noto\u02bbg\u02bbri yozilgan','auth/missing-password':'Parolni kiriting','auth/weak-password':'Parol kamida 6 belgi bo\u02bblsin','auth/email-already-in-use':'Bu email bilan akkaunt bor — Kirish ni bosing','auth/network-request-failed':'Internet yo\u02bbq','auth/operation-not-allowed':'Firebase da bu kirish usuli yoqilmagan (Authentication → Sign-in method)','auth/popup-closed-by-user':'Google oynasi yopildi','auth/unauthorized-domain':'Bu sayt manzili Firebase → Authentication → Settings → Authorized domains ga qo\u02bbshilmagan','auth/too-many-requests':'Juda ko\u02bbp urinish, birozdan keyin qayta urinib ko\u02bbring'};
+function lerr(t,ok){const e=$('lerr');e.textContent=t;e.className=ok?'ok':'bad'}
+function showErr(e){lerr(AM[e.code]||(e.message||'Xato'))}
+function swMode(){signUp=!signUp;$('lt').textContent=signUp?'\ud83c\udd95 Akkaunt yaratish':'\ud83d\udd10 Kirish';$('lgo').textContent=signUp?'Ro\u02bbyxatdan o\u02bbtish':'Kirish';$('lsw').textContent=signUp?'Akkauntim bor — Kirish':'Akkaunt yaratish';$('lp2w').style.display=signUp?'block':'none';$('lpw').autocomplete=signUp?'new-password':'current-password';lerr('')}
+async function doAuth(){const em=$('lem').value.trim(),pw=$('lpw').value;lerr('');
+  if(!em||!pw){lerr('Email va parolni kiriting');return}
+  if(signUp&&pw!==$('lpw2').value){lerr('Parollar bir xil emas');return}
+  try{const a=firebase.auth();signUp?await a.createUserWithEmailAndPassword(em,pw):await a.signInWithEmailAndPassword(em,pw)}catch(e){showErr(e)}}
+async function gAuth(){lerr('');try{const a=firebase.auth(),p=new firebase.auth.GoogleAuthProvider();
+  try{await a.signInWithPopup(p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'){await a.signInWithRedirect(p);return}throw e}}catch(e){showErr(e)}}
+async function resetPw(){const em=$('lem').value.trim();if(!em){lerr('Avval emailni yozing');return}
+  try{await firebase.auth().sendPasswordResetEmail(em);lerr('Parolni tiklash havolasi emailga yuborildi',true)}catch(e){showErr(e)}}
 (async()=>{try{
-  if(!window.claude||!claude.use)return;
-  const db=await claude.use('db');if(!db)return;
+  const db=await getFbDb();if(!db)return;
   DB=db;let first=true;
-  const off=()=>setSync('📴 Oflayn: maʼlumot faqat shu qurilmada');
+  const off=()=>setSync('📴 Oflayn: maʼlumot telefonda saqlanadi, internet boʻlganda bulutga yuboriladi');
+  const mk='davomat-mig-'+db.uid;
   db.collection('lessons').onSnapshot(s=>{
     if(s.empty&&s.metadata.fromCache)return;
-    let mig=false;try{mig=localStorage.getItem('davomat-mig')==='1'}catch(e){}
-    if(first&&s.empty&&!mig&&st.lessons.length){st.lessons.forEach(dbSave);try{localStorage.setItem('davomat-mig','1')}catch(e){}first=false;setSync('☁️ Sinxronlanmoqda…');return}
-    first=false;try{localStorage.setItem('davomat-mig','1')}catch(e){}
-    st.lessons=s.docs.map(d=>d.data());persist();render();setSync('☁️ Sinxronlangan — telefon va sayt bir xil');
+    if(first){first=false;let mig=false;try{mig=localStorage.getItem(mk)==='1'}catch(e){}
+      if(!mig){const ids=new Set(s.docs.map(d=>String(d.id)));const up=st.lessons.filter(l=>!ids.has(String(l.id)));up.forEach(dbSave);try{localStorage.setItem(mk,'1')}catch(e){}
+        if(up.length){setSync('☁️ Eski darslar bulutga yuklanmoqda…');return}}}
+    st.lessons=s.docs.map(d=>d.data());persist();render();setSync('☁️ Bulutga saqlangan — '+db.email);
   },off);
   db.doc('cfg/main').onSnapshot(d=>{if(d.exists){st.cfg=Object.assign(st.cfg,d.data());persist();cfgFill();render()}else dbCfg()},off);
 }catch(e){}})();
