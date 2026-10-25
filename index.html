@@ -76,6 +76,7 @@ input,select{height:48px}
   <div class="stat"><small>DCHJ 15:00–16:30</small><b id="g_D">0</b><em id="n_D"></em></div>
   <div class="stat"><small>1 davomat narxi</small><b id="sPrice">0</b></div>
   <div class="stat"><small>Darslar soni</small><b id="sLessons">0</b></div>
+  <div class="stat" id="todayCard" style="grid-column:1/-1"><small>📅 Bugun tushgan pul</small><b id="sToday" class="ok" style="font-size:24px">0</b><em id="nToday"></em></div>
 </div>
 
 <div class="card tab" data-t="h">
@@ -84,6 +85,8 @@ input,select{height:48px}
   <div id="chart"></div>
   <div class="lg"><span><i style="background:var(--pri)"></i><span id="lgCur"></span></span><span><i style="background:var(--mut)"></i><span id="lgPrev"></span></span></div>
 </div>
+
+<div class="card tab" data-t="h"><h2>📅 Kunlik daromad</h2><div id="daily"></div></div>
 
 <div class="card tab" id="formCard" data-t="k">
   <b id="formTitle">Yangi dars qoʻshish</b>
@@ -234,6 +237,8 @@ function render(){
   $('sMeta').textContent=monName(ym)+' · jami '+tin+' ta davomat, '+tout+' ta kelmadi';
   $('sPrice').textContent=fmt(price)+' soʻm';
   $('sLessons').textContent=rows.length;
+  {const tp=priceFor(today().slice(0,7)),tl=st.lessons.filter(l=>l.date===today()),tn=tl.reduce((s,l)=>s+l.in,0);$('sToday').textContent=fmt(tn*tp)+' soʻm';$('nToday').textContent=tl.length+' ta dars · '+tn+' ta davomat'}
+  daily(ym,price);
   chart(ym);
 }
 function autoGrp(){const dv=$('date').value||today(),[y,m,d]=dv.split('-').map(Number),wd=new Date(y,m-1,d).getDay(),isT=dv===today(),now=new Date(),nm=now.getHours()*60+now.getMinutes();
@@ -252,6 +257,19 @@ function loadXlsx(){return new Promise((res,rej)=>{if(window.XLSX)return res();c
 async function exportXlsx(){const ym=$('month').value,aoa=exportRows(ym);
 try{await loadXlsx();const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:12},{wch:7},{wch:24},{wch:13},{wch:8},{wch:9},{wch:16},{wch:12}];XLSX.utils.book_append_sheet(wb,ws,monName(ym));dl(new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/octet-stream'}),'davomat-'+ym+'.xlsx')}
 catch(e){const Q=String.fromCharCode(34);const csv='\ufeff'+aoa.map(r=>r.map(c=>Q+String(c==null?'':c).split(Q).join(Q+Q)+Q).join(';')).join('\r\n');dl(new Blob([csv],{type:'text/csv;charset=utf-8'}),'davomat-'+ym+'.csv');alert('Excel kutubxonasi yuklanmadi, CSV fayl yuklandi (Excelda ochiladi).')}}
+function daily(ym,price){
+  const m={};st.lessons.filter(l=>l.date.slice(0,7)===ym).forEach(l=>{const o=m[l.date]||(m[l.date]={in:0,out:0,n:0});o.in+=l.in;o.out+=l.out;o.n++});
+  const days=Object.keys(m).sort().reverse(),mx=Math.max(1,...days.map(d=>m[d].in)),box=$('daily'),FN=['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+  box.innerHTML='';if(!days.length){box.innerHTML='<div class="empty">Bu oyda hali dars yoʻq</div>';return}
+  days.forEach(d=>{const[y,mo,dd]=d.split('-').map(Number),o=m[d];
+    const r=document.createElement('div');r.style.cssText='padding:8px 0;border-bottom:1px solid var(--bd)';
+    const top=document.createElement('div');top.style.cssText='display:flex;justify-content:space-between;gap:8px;font-size:14px';
+    const a=document.createElement('span');a.textContent=dd+' '+MON[mo-1]+', '+FN[new Date(y,mo-1,dd).getDay()]+(d===today()?' • bugun':'');
+    const b=document.createElement('b');b.textContent=fmt(o.in*price)+' soʻm';top.append(a,b);
+    const sub=document.createElement('div');sub.style.cssText='font-size:12px;color:var(--mut);margin:2px 0 5px';sub.textContent=o.n+' ta dars · keldi '+o.in+' · kelmadi '+o.out;
+    const bar=document.createElement('div');bar.style.cssText='height:6px;border-radius:3px;background:var(--bd)';
+    const f=document.createElement('div');f.style.cssText='height:100%;border-radius:3px;background:var(--pri);width:'+Math.round(o.in/mx*100)+'%';bar.appendChild(f);
+    r.append(top,sub,bar);box.appendChild(r)})}
 function reset(){editId=null;setTimeout(autoGrp,0);$('in').value='';$('out').value='';$('date').value=today();$('formTitle').textContent='Yangi dars qoʻshish';$('cancel').style.display='none';$('save').textContent='Saqlash'}
 function edit(id){const l=st.lessons.find(x=>x.id===id);if(!l)return;editId=id;
   $('date').value=l.date;if(l.g)$('grp').value=l.g;$('in').value=l.in;$('out').value=l.out;
@@ -266,7 +284,7 @@ $('save').onclick=()=>{
   persist();dbSave(rec);$('month').value=date.slice(0,7);reset();render();$('save').textContent='✓ Saqlandi';setTimeout(()=>{$('save').textContent='Saqlash'},1200);
 };
 $('cancel').onclick=reset;
-$('month').onchange=render;$('date').onchange=()=>{if(!editId)autoGrp()};document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!editId){if(!$('in').value&&!$('out').value)$('date').value=today();autoGrp()}});
+$('month').onchange=render;document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});$('date').onchange=()=>{if(!editId)autoGrp()};document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!editId){if(!$('in').value&&!$('out').value)$('date').value=today();autoGrp()}});
 $('saveCfg').onclick=()=>{
   const t=parseFloat($('cTotal').value),a=parseFloat($('c30').value),b=parseFloat($('c31').value);
   if(!(t>0&&a>0&&b>0)){alert('Qiymatlar 0 dan katta boʻlishi kerak');return}
@@ -274,7 +292,7 @@ $('saveCfg').onclick=()=>{
   st.cfg={total:t,d30:a,d31:b,groups:gs};persist();dbCfg();applyG();fillGrp();render();alert('Saqlandi');
 };
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-$('grid').after($('formCard'));cfgFill();
+$('grid').insertBefore($('todayCard'),$('grid').children[1]);$('grid').after($('formCard'));cfgFill();
 $('month').value=today().slice(0,7);reset();render();tab('k');
 setSync('📴 Oflayn: maʼlumot faqat shu qurilmada');
 const FBCFG={apiKey:"AIzaSyDoa3c2FzXrWSrWduUc9evbGs5OC2FEPlc",authDomain:"attendace-522cf.firebaseapp.com",projectId:"attendace-522cf",storageBucket:"attendace-522cf.firebasestorage.app",messagingSenderId:"131447015623",appId:"1:131447015623:web:17cf16f560b7b83a26d6e2"};
