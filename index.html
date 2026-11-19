@@ -242,7 +242,7 @@ function render(){
   $('sPrice').textContent=fmt(price)+' soʻm';
   $('sLessons').textContent=rows.length;
   {const tp=priceFor(today().slice(0,7)),tl=st.lessons.filter(l=>l.date===today()),tn=tl.reduce((s,l)=>s+l.in,0);$('sToday').textContent=fmt(tn*tp)+' soʻm';$('nToday').textContent=tl.length+' ta dars · '+tn+' ta davomat'}
-  {const dd=new Set(rows.map(l=>l.date)).size,tot=tin*price,cd=ym===today().slice(0,7)?+today().slice(8,10):dim(ym);const[yy,mm]=ym.split('-').map(Number);let nd=0;for(let q=1;q<=cd;q++)if(new Date(yy,mm-1,q).getDay()!==0)nd++;$('nAvg').innerHTML='📊 Kunlik oʻrtacha: '+(dd?fmt(tot/dd):0)+' soʻm (dars kuniga) · <b style="font-size:18px;color:#fff">'+fmt(tot/Math.max(cd,1))+' soʻm</b> (kalendar kuniga)<br>📅 Yakshanbasiz: <b style="font-size:18px;color:#fff">'+fmt(tot/Math.max(nd,1))+' soʻm</b> kuniga ('+nd+' kun)'}
+  {const dd=new Set(rows.map(l=>l.date)).size,tot=tin*price,cd=ym===today().slice(0,7)?+today().slice(8,10):dim(ym);$('nAvg').innerHTML='📅 Kunlik oʻrtacha: <b style="font-size:20px;color:#fff">'+(dd?fmt(tot/dd):0)+' soʻm</b> (dars kuniga) · <b style="font-size:20px;color:#fff">'+fmt(tot/Math.max(cd,1))+' soʻm</b> (kalendar kuniga)'}
   daily(ym,price);
   chart(ym);
 }
