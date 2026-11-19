@@ -73,7 +73,7 @@ input,select{height:48px}
 </div>
 
 <div class="grid tab" id="grid" data-t="kh">
-  <div class="stat big"><small>4 ta guruh — shu oydagi umumiy pul</small><b id="sTotal">0</b> <span>soʻm</span><em id="sMeta"></em></div>
+  <div class="stat big"><small>4 ta guruh — shu oydagi umumiy pul</small><b id="sTotal">0</b> <span>soʻm</span><em id="sMeta"></em><em id="nAvg" style="margin-top:3px"></em></div>
   <div class="stat"><small>SPSH 10:00–12:00</small><b id="g_A">0</b><em id="n_A"></em></div>
   <div class="stat"><small>SPSH 13:30–15:00</small><b id="g_B">0</b><em id="n_B"></em></div>
   <div class="stat"><small>DCHJ 13:30–15:00</small><b id="g_C">0</b><em id="n_C"></em></div>
@@ -161,7 +161,7 @@ let G;const DN=['Yak','Dush','Sesh','Chor','Pay','Jum','Shan'];const dayNames=d=
 const MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
 let st={lessons:[],cfg:{total:100000,d30:13,d31:13.5}};
 let editId=null;
-try{const r=localStorage.getItem('davomat-v1');if(r){const p=JSON.parse(r);if(p&&p.lessons)st={lessons:p.lessons,cfg:Object.assign(st.cfg,p.cfg||{})}}}catch(e){}
+try{const r=localStorage.getItem('davomat-v1');if(r){const p=JSON.parse(r);if(p&&p.lessons)st={lessons:p.lessons,cfg:Object.assign(st.cfg,p.cfg||{}),students:p.students||[]}}}catch(e){}
 let DB=null;
 function persist(){try{localStorage.setItem('davomat-v1',JSON.stringify(st))}catch(e){}}
 const setSync=t=>{$('sync').textContent=t};
@@ -242,6 +242,7 @@ function render(){
   $('sPrice').textContent=fmt(price)+' soʻm';
   $('sLessons').textContent=rows.length;
   {const tp=priceFor(today().slice(0,7)),tl=st.lessons.filter(l=>l.date===today()),tn=tl.reduce((s,l)=>s+l.in,0);$('sToday').textContent=fmt(tn*tp)+' soʻm';$('nToday').textContent=tl.length+' ta dars · '+tn+' ta davomat'}
+  {const dd=new Set(rows.map(l=>l.date)).size,tot=tin*price,cd=ym===today().slice(0,7)?+today().slice(8,10):dim(ym);$('nAvg').innerHTML='📊 Kunlik oʻrtacha: '+(dd?fmt(tot/dd):0)+' soʻm (dars kuniga) · <b style="font-size:18px;color:#fff">'+fmt(tot/Math.max(cd,1))+' soʻm</b> (kalendar kuniga)'}
   daily(ym,price);
   chart(ym);
 }
@@ -284,7 +285,7 @@ $('save').onclick=()=>{
   const g=$('grp').value,[y,m,d]=date.split('-').map(Number),wd=new Date(y,m-1,d).getDay();
   if(!G[g].d.includes(wd)&&!confirm('Tanlangan sana bu guruh kunlariga ('+dayNames(G[g].d)+') mos kelmaydi. Baribir saqlansinmi?'))return;
   const rec={id:editId||Date.now(),date,g,in:Math.max(0,parseInt($('in').value)||0),out:Math.max(0,parseInt($('out').value)||0)};
-  const old0=editId&&st.lessons.find(x=>x.id===editId);if(editId)st.lessons=st.lessons.map(x=>x.id===editId?rec:x);else st.lessons.push(rec);
+  const old0=editId&&st.lessons.find(x=>x.id===editId);if(old0&&old0.roster){rec.roster=old0.roster;rec.absent=old0.absent||[]}if(editId)st.lessons=st.lessons.map(x=>x.id===editId?rec:x);else st.lessons.push(rec);
   persist();dbSave(rec);$('month').value=date.slice(0,7);reset();render();$('save').textContent='✓ Saqlandi';setTimeout(()=>{$('save').textContent='Saqlash'},1200);
 };
 $('cancel').onclick=reset;
